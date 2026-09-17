@@ -75,13 +75,16 @@ resource "aws_lambda_function" "export_worker" {
   handler       = "index.handler"
   runtime       = "nodejs20.x"
   timeout       = 900
+  memory_size   = 1024
+  s3_bucket     = "casebook-lambda-artifacts"
+  s3_key        = "export-worker/v0.4.2.zip"
 
   environment {
     variables = {
       LOG_LEVEL                 = "DEBUG"
       STAGING_BUCKET            = aws_s3_bucket.export_staging.id
-      AWS_ACCESS_KEY_ID         = var.export_worker_access_key_id
-      AWS_SECRET_ACCESS_KEY     = var.export_worker_secret_access_key
+      EXPORT_AWS_KEY_ID         = var.export_worker_access_key_id
+      EXPORT_AWS_SECRET         = var.export_worker_secret_access_key
       ANALYTICS_PUBLISHABLE_KEY = var.analytics_publishable_key
     }
   }
@@ -110,4 +113,12 @@ resource "aws_apigatewayv2_stage" "downloads" {
   api_id      = aws_apigatewayv2_api.downloads.id
   name        = "$default"
   auto_deploy = true
+}
+
+resource "aws_lambda_permission" "downloads" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.export_worker.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.downloads.execution_arn}/*/*"
 }
