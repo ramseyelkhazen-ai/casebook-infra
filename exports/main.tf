@@ -1,3 +1,23 @@
+terraform {
+  required_version = ">= 1.5.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  region = var.region
+}
+
+variable "region" {
+  type    = string
+  default = "eu-west-2"
+}
+
 variable "export_worker_access_key_id" {
   type    = string
   default = "AKIA3H7QX2MPLEXAMPLE"
@@ -86,11 +106,11 @@ resource "aws_lambda_function" "export_worker" {
 
   environment {
     variables = {
-      LOG_LEVEL                 = "DEBUG"
-      STAGING_BUCKET            = aws_s3_bucket.export_staging.id
-      EXPORT_AWS_KEY_ID         = var.export_worker_access_key_id
-      EXPORT_AWS_SECRET         = var.export_worker_secret_access_key
-      SENTRY_DSN                = var.sentry_dsn
+      LOG_LEVEL         = "DEBUG"
+      STAGING_BUCKET    = aws_s3_bucket.export_staging.id
+      EXPORT_AWS_KEY_ID = var.export_worker_access_key_id
+      EXPORT_AWS_SECRET = var.export_worker_secret_access_key
+      SENTRY_DSN        = var.sentry_dsn
     }
   }
 }
