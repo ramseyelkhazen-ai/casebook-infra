@@ -9,10 +9,10 @@ variable "export_worker_secret_access_key" {
   # value in shared-services.auto.tfvars
 }
 
-variable "analytics_publishable_key" {
-  description = "Client-side key for the embedded analytics widget. Public by design."
+variable "sentry_dsn" {
+  description = "Sentry DSN for the export worker. Publishable by design."
   type        = string
-  default     = "pk_live_4f9c2ab81de74c0e9b3a"
+  default     = "https://4f9c2ab81de74c0e9b3a@o447951.ingest.sentry.io/5428537"
 }
 
 resource "aws_iam_role" "export_worker" {
@@ -43,6 +43,11 @@ resource "aws_iam_role_policy" "export_worker" {
   })
 }
 
+resource "aws_iam_role_policy_attachment" "export_worker_basic" {
+  role       = aws_iam_role.export_worker.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
 resource "aws_s3_bucket" "export_staging" {
   bucket = "casebook-export-staging"
 }
@@ -65,7 +70,7 @@ resource "aws_s3_bucket_public_access_block" "export_staging" {
 }
 
 resource "aws_cloudwatch_log_group" "export_worker" {
-  name              = "/casebook/export-worker"
+  name              = "/aws/lambda/export-worker"
   retention_in_days = 0
 }
 
@@ -85,7 +90,7 @@ resource "aws_lambda_function" "export_worker" {
       STAGING_BUCKET            = aws_s3_bucket.export_staging.id
       EXPORT_AWS_KEY_ID         = var.export_worker_access_key_id
       EXPORT_AWS_SECRET         = var.export_worker_secret_access_key
-      ANALYTICS_PUBLISHABLE_KEY = var.analytics_publishable_key
+      SENTRY_DSN                = var.sentry_dsn
     }
   }
 }
