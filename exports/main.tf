@@ -89,6 +89,11 @@ resource "aws_lambda_function" "export_worker" {
   }
 }
 
+resource "aws_apigatewayv2_api" "downloads" {
+  name          = "export-downloads"
+  protocol_type = "HTTP"
+}
+
 resource "aws_apigatewayv2_route" "download" {
   api_id             = aws_apigatewayv2_api.downloads.id
   route_key          = "GET /exports/{token}"
