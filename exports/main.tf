@@ -1,5 +1,3 @@
-# exports/main.tf — Scheduled Exports
-
 variable "export_worker_access_key_id" {
   type    = string
   default = "AKIA3H7QX2MPLEXAMPLE"
@@ -94,8 +92,22 @@ resource "aws_apigatewayv2_api" "downloads" {
   protocol_type = "HTTP"
 }
 
+resource "aws_apigatewayv2_integration" "download" {
+  api_id                 = aws_apigatewayv2_api.downloads.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.export_worker.invoke_arn
+  payload_format_version = "2.0"
+}
+
 resource "aws_apigatewayv2_route" "download" {
   api_id             = aws_apigatewayv2_api.downloads.id
   route_key          = "GET /exports/{token}"
   authorization_type = "NONE"
+  target             = "integrations/${aws_apigatewayv2_integration.download.id}"
+}
+
+resource "aws_apigatewayv2_stage" "downloads" {
+  api_id      = aws_apigatewayv2_api.downloads.id
+  name        = "$default"
+  auto_deploy = true
 }
